@@ -2,25 +2,27 @@ import { Abi } from '@starknet-react/core';
 
 /// A prefix to be added to the src path of resources (images, etc.) in order to correctly load them.
 /// Production mode is when deploying the app to a server, github pages in our case.
-export const SrcPrefix =
-  import.meta.env.MODE === 'production' ? '/catering-app' : '';
+export const baseDomain =
+  import.meta.env.MODE === 'production'
+    ? 'https://ofir-starkware.github.io/starkwise'
+    : 'http://localhost:5173';
 
 /// The address of the deployed contract.
-export const CONTRACT_ADDRESS =
-  '0x049c75609bb077a9427bc26a9935472ec75e5508ed216ef7f7ad2693397deebc';
+export const GROUPS_CONTRACT_ADDRESS =
+  '0x079c2142585298c3b59511c89ddf36ab7d6e36529c4d4e2474c948a5ee33e263';
 /// The ABI of the deployed contract. Can be found on starkscan.
 /// For the above contract, the ABI can be found at:
 /// https://sepolia.starkscan.co/contract/0x049c75609bb077a9427bc26a9935472ec75e5508ed216ef7f7ad2693397deebc
 /// And the ABI is accessible under the 'Class Code/History' tab -> 'Copy ABI Code' button.
-export const ABI = [
+export const GROUPS_CONTRACT_ABI = [
   {
-    name: 'RegistrationImpl',
     type: 'impl',
-    interface_name: 'event_manager::event_manager::IRegistration',
+    name: 'XpensePoolImpl',
+    interface_name: 'contracts::xpensepool::interface::IXpensePool',
   },
   {
-    name: 'event_manager::utils::time::Time',
     type: 'struct',
+    name: 'contracts_commons::types::time::Timestamp',
     members: [
       {
         name: 'seconds',
@@ -29,8 +31,244 @@ export const ABI = [
     ],
   },
   {
-    name: 'core::bool',
+    type: 'struct',
+    name: 'contracts::xpensepool::interface::TxInfo',
+    members: [
+      {
+        name: 'caller',
+        type: 'core::starknet::contract_address::ContractAddress',
+      },
+      {
+        name: 'recipient',
+        type: 'core::starknet::contract_address::ContractAddress',
+      },
+      {
+        name: 'amount',
+        type: 'core::integer::u128',
+      },
+      {
+        name: 'timestamp',
+        type: 'contracts_commons::types::time::Timestamp',
+      },
+      {
+        name: 'group_id',
+        type: 'core::felt252',
+      },
+    ],
+  },
+  {
+    type: 'struct',
+    name: 'contracts::xpensepool::interface::GroupMetaData',
+    members: [
+      {
+        name: 'display_name',
+        type: 'core::felt252',
+      },
+      {
+        name: 'entry_amount',
+        type: 'core::integer::u128',
+      },
+      {
+        name: 'max_n_accounts',
+        type: 'core::integer::u16',
+      },
+      {
+        name: 'balance',
+        type: 'core::integer::u128',
+      },
+    ],
+  },
+  {
+    type: 'struct',
+    name: 'contracts::xpensepool::interface::GroupInfoExternal',
+    members: [
+      {
+        name: 'admins',
+        type: 'core::array::Array::<core::starknet::contract_address::ContractAddress>',
+      },
+      {
+        name: 'members',
+        type: 'core::array::Array::<core::starknet::contract_address::ContractAddress>',
+      },
+      {
+        name: 'tx_history',
+        type: 'core::array::Array::<contracts::xpensepool::interface::TxInfo>',
+      },
+      {
+        name: 'metadata',
+        type: 'contracts::xpensepool::interface::GroupMetaData',
+      },
+    ],
+  },
+  {
+    type: 'interface',
+    name: 'contracts::xpensepool::interface::IXpensePool',
+    items: [
+      {
+        type: 'function',
+        name: 'create_group',
+        inputs: [
+          {
+            name: 'display_name',
+            type: 'core::felt252',
+          },
+          {
+            name: 'entry_amount',
+            type: 'core::integer::u128',
+          },
+          {
+            name: 'max_n_accounts',
+            type: 'core::integer::u16',
+          },
+        ],
+        outputs: [
+          {
+            type: 'core::felt252',
+          },
+        ],
+        state_mutability: 'external',
+      },
+      {
+        type: 'function',
+        name: 'get_group',
+        inputs: [
+          {
+            name: 'group_id',
+            type: 'core::felt252',
+          },
+        ],
+        outputs: [
+          {
+            type: 'contracts::xpensepool::interface::GroupInfoExternal',
+          },
+        ],
+        state_mutability: 'view',
+      },
+      {
+        type: 'function',
+        name: 'list_groups_by_account',
+        inputs: [
+          {
+            name: 'account',
+            type: 'core::starknet::contract_address::ContractAddress',
+          },
+        ],
+        outputs: [
+          {
+            type: 'core::array::Array::<contracts::xpensepool::interface::GroupInfoExternal>',
+          },
+        ],
+        state_mutability: 'view',
+      },
+      {
+        type: 'function',
+        name: 'register_to_group',
+        inputs: [
+          {
+            name: 'group_id',
+            type: 'core::felt252',
+          },
+        ],
+        outputs: [],
+        state_mutability: 'external',
+      },
+      {
+        type: 'function',
+        name: 'transfer_from_group',
+        inputs: [
+          {
+            name: 'group_id',
+            type: 'core::felt252',
+          },
+          {
+            name: 'recipient',
+            type: 'core::starknet::contract_address::ContractAddress',
+          },
+          {
+            name: 'amount',
+            type: 'core::integer::u128',
+          },
+        ],
+        outputs: [],
+        state_mutability: 'external',
+      },
+      {
+        type: 'function',
+        name: 'set_name',
+        inputs: [
+          {
+            name: 'name',
+            type: 'core::felt252',
+          },
+        ],
+        outputs: [],
+        state_mutability: 'external',
+      },
+      {
+        type: 'function',
+        name: 'get_name',
+        inputs: [
+          {
+            name: 'account',
+            type: 'core::starknet::contract_address::ContractAddress',
+          },
+        ],
+        outputs: [
+          {
+            type: 'core::felt252',
+          },
+        ],
+        state_mutability: 'view',
+      },
+    ],
+  },
+  {
+    type: 'impl',
+    name: 'ReplaceabilityImpl',
+    interface_name:
+      'contracts_commons::components::replaceability::interface::IReplaceable',
+  },
+  {
+    type: 'struct',
+    name: 'core::array::Span::<core::felt252>',
+    members: [
+      {
+        name: 'snapshot',
+        type: '@core::array::Array::<core::felt252>',
+      },
+    ],
+  },
+  {
+    type: 'struct',
+    name: 'contracts_commons::components::replaceability::interface::EICData',
+    members: [
+      {
+        name: 'eic_hash',
+        type: 'core::starknet::class_hash::ClassHash',
+      },
+      {
+        name: 'eic_init_data',
+        type: 'core::array::Span::<core::felt252>',
+      },
+    ],
+  },
+  {
     type: 'enum',
+    name: 'core::option::Option::<contracts_commons::components::replaceability::interface::EICData>',
+    variants: [
+      {
+        name: 'Some',
+        type: 'contracts_commons::components::replaceability::interface::EICData',
+      },
+      {
+        name: 'None',
+        type: '()',
+      },
+    ],
+  },
+  {
+    type: 'enum',
+    name: 'core::bool',
     variants: [
       {
         name: 'False',
@@ -43,481 +281,16 @@ export const ABI = [
     ],
   },
   {
-    name: 'event_manager::event_manager::EventUserInfoInner',
-    type: 'struct',
-    members: [
-      {
-        name: 'time',
-        type: 'event_manager::utils::time::Time',
-      },
-      {
-        name: 'registered',
-        type: 'core::bool',
-      },
-      {
-        name: 'canceled',
-        type: 'core::bool',
-      },
-    ],
-  },
-  {
-    name: 'event_manager::event_manager::EventUserInfo',
-    type: 'struct',
-    members: [
-      {
-        name: 'id',
-        type: 'core::integer::u32',
-      },
-      {
-        name: 'info',
-        type: 'event_manager::event_manager::EventUserInfoInner',
-      },
-    ],
-  },
-  {
-    name: 'event_manager::event_manager::UserParticipation',
-    type: 'struct',
-    members: [
-      {
-        name: 'user',
-        type: 'core::starknet::contract_address::ContractAddress',
-      },
-      {
-        name: 'n_participations',
-        type: 'core::integer::u32',
-      },
-    ],
-  },
-  {
-    name: 'event_manager::event_manager::EventInfoInner',
-    type: 'struct',
-    members: [
-      {
-        name: 'time',
-        type: 'event_manager::utils::time::Time',
-      },
-      {
-        name: 'number_of_participants',
-        type: 'core::integer::u32',
-      },
-      {
-        name: 'canceled',
-        type: 'core::bool',
-      },
-      {
-        name: 'locked',
-        type: 'core::bool',
-      },
-      {
-        name: 'description',
-        type: 'core::felt252',
-      },
-    ],
-  },
-  {
-    name: 'event_manager::event_manager::EventInfo',
-    type: 'struct',
-    members: [
-      {
-        name: 'id',
-        type: 'core::integer::u32',
-      },
-      {
-        name: 'info',
-        type: 'event_manager::event_manager::EventInfoInner',
-      },
-    ],
-  },
-  {
-    name: 'core::array::Span::<core::starknet::contract_address::ContractAddress>',
-    type: 'struct',
-    members: [
-      {
-        name: 'snapshot',
-        type: '@core::array::Array::<core::starknet::contract_address::ContractAddress>',
-      },
-    ],
-  },
-  {
-    name: 'event_manager::event_manager::IRegistration',
-    type: 'interface',
-    items: [
-      {
-        name: 'get_user_events_by_time',
-        type: 'function',
-        inputs: [
-          {
-            name: 'user',
-            type: 'core::starknet::contract_address::ContractAddress',
-          },
-          {
-            name: 'start',
-            type: 'event_manager::utils::time::Time',
-          },
-          {
-            name: 'end',
-            type: 'event_manager::utils::time::Time',
-          },
-        ],
-        outputs: [
-          {
-            type: 'core::array::Array::<event_manager::event_manager::EventUserInfo>',
-          },
-        ],
-        state_mutability: 'view',
-      },
-      {
-        name: 'n_events',
-        type: 'function',
-        inputs: [],
-        outputs: [
-          {
-            type: 'core::integer::u32',
-          },
-        ],
-        state_mutability: 'view',
-      },
-      {
-        name: 'get_participation_report_by_time',
-        type: 'function',
-        inputs: [
-          {
-            name: 'start',
-            type: 'event_manager::utils::time::Time',
-          },
-          {
-            name: 'end',
-            type: 'event_manager::utils::time::Time',
-          },
-        ],
-        outputs: [
-          {
-            type: 'core::array::Array::<event_manager::event_manager::UserParticipation>',
-          },
-        ],
-        state_mutability: 'view',
-      },
-      {
-        name: 'event_info',
-        type: 'function',
-        inputs: [
-          {
-            name: 'event_id',
-            type: 'core::integer::u32',
-          },
-        ],
-        outputs: [
-          {
-            type: 'event_manager::event_manager::EventInfoInner',
-          },
-        ],
-        state_mutability: 'view',
-      },
-      {
-        name: 'get_events_infos_by_time',
-        type: 'function',
-        inputs: [
-          {
-            name: 'start',
-            type: 'event_manager::utils::time::Time',
-          },
-          {
-            name: 'end',
-            type: 'event_manager::utils::time::Time',
-          },
-        ],
-        outputs: [
-          {
-            type: 'core::array::Array::<event_manager::event_manager::EventInfo>',
-          },
-        ],
-        state_mutability: 'view',
-      },
-      {
-        name: 'register',
-        type: 'function',
-        inputs: [
-          {
-            name: 'event_id',
-            type: 'core::integer::u32',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'unregister',
-        type: 'function',
-        inputs: [
-          {
-            name: 'event_id',
-            type: 'core::integer::u32',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'add_event',
-        type: 'function',
-        inputs: [
-          {
-            name: 'time',
-            type: 'core::felt252',
-          },
-          {
-            name: 'description',
-            type: 'core::felt252',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'modify_event_time',
-        type: 'function',
-        inputs: [
-          {
-            name: 'event_id',
-            type: 'core::integer::u32',
-          },
-          {
-            name: 'time',
-            type: 'core::felt252',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'lock_event',
-        type: 'function',
-        inputs: [
-          {
-            name: 'event_id',
-            type: 'core::integer::u32',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'unlock_event',
-        type: 'function',
-        inputs: [
-          {
-            name: 'event_id',
-            type: 'core::integer::u32',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'set_event_canceled',
-        type: 'function',
-        inputs: [
-          {
-            name: 'event_id',
-            type: 'core::integer::u32',
-          },
-          {
-            name: 'canceled',
-            type: 'core::bool',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'add_allowed_user',
-        type: 'function',
-        inputs: [
-          {
-            name: 'user',
-            type: 'core::starknet::contract_address::ContractAddress',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'remove_allowed_user',
-        type: 'function',
-        inputs: [
-          {
-            name: 'user',
-            type: 'core::starknet::contract_address::ContractAddress',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'add_allowed_users',
-        type: 'function',
-        inputs: [
-          {
-            name: 'users',
-            type: 'core::array::Span::<core::starknet::contract_address::ContractAddress>',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-      {
-        name: 'is_allowed_user',
-        type: 'function',
-        inputs: [
-          {
-            name: 'user',
-            type: 'core::starknet::contract_address::ContractAddress',
-          },
-        ],
-        outputs: [
-          {
-            type: 'core::bool',
-          },
-        ],
-        state_mutability: 'view',
-      },
-      {
-        name: 'is_admin',
-        type: 'function',
-        inputs: [
-          {
-            name: 'user',
-            type: 'core::starknet::contract_address::ContractAddress',
-          },
-        ],
-        outputs: [
-          {
-            type: 'core::bool',
-          },
-        ],
-        state_mutability: 'view',
-      },
-      {
-        name: 'add_admin',
-        type: 'function',
-        inputs: [
-          {
-            name: 'user',
-            type: 'core::starknet::contract_address::ContractAddress',
-          },
-        ],
-        outputs: [],
-        state_mutability: 'external',
-      },
-    ],
-  },
-  {
-    name: 'constructor',
     type: 'constructor',
+    name: 'constructor',
     inputs: [
       {
-        name: 'admin',
-        type: 'core::starknet::contract_address::ContractAddress',
-      },
-    ],
-  },
-  {
-    kind: 'struct',
-    name: 'event_manager::event_manager::registration::UserRegistration',
-    type: 'event',
-    members: [
-      {
-        kind: 'key',
-        name: 'user',
+        name: 'token_address',
         type: 'core::starknet::contract_address::ContractAddress',
       },
       {
-        kind: 'key',
-        name: 'event_id',
-        type: 'core::integer::u32',
-      },
-      {
-        kind: 'data',
-        name: 'status',
-        type: 'core::bool',
-      },
-    ],
-  },
-  {
-    kind: 'struct',
-    name: 'event_manager::event_manager::registration::EventChanged',
-    type: 'event',
-    members: [
-      {
-        kind: 'data',
-        name: 'event_id',
-        type: 'core::integer::u32',
-      },
-      {
-        kind: 'data',
-        name: 'time',
-        type: 'event_manager::utils::time::Time',
-      },
-    ],
-  },
-  {
-    kind: 'struct',
-    name: 'event_manager::event_manager::registration::EventCancellation',
-    type: 'event',
-    members: [
-      {
-        kind: 'data',
-        name: 'event_id',
-        type: 'core::integer::u32',
-      },
-      {
-        kind: 'data',
-        name: 'canceled',
-        type: 'core::bool',
-      },
-    ],
-  },
-  {
-    kind: 'struct',
-    name: 'event_manager::event_manager::registration::UserAllowed',
-    type: 'event',
-    members: [
-      {
-        kind: 'data',
-        name: 'user',
+        name: 'governance_admin',
         type: 'core::starknet::contract_address::ContractAddress',
-      },
-      {
-        kind: 'data',
-        name: 'allowed',
-        type: 'core::bool',
-      },
-    ],
-  },
-  {
-    kind: 'enum',
-    name: 'event_manager::event_manager::registration::Event',
-    type: 'event',
-    variants: [
-      {
-        kind: 'nested',
-        name: 'UserRegistration',
-        type: 'event_manager::event_manager::registration::UserRegistration',
-      },
-      {
-        kind: 'nested',
-        name: 'EventChanged',
-        type: 'event_manager::event_manager::registration::EventChanged',
-      },
-      {
-        kind: 'nested',
-        name: 'EventCancellation',
-        type: 'event_manager::event_manager::registration::EventCancellation',
-      },
-      {
-        kind: 'nested',
-        name: 'UserAllowed',
-        type: 'event_manager::event_manager::registration::UserAllowed',
       },
     ],
   },
